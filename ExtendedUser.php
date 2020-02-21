@@ -118,8 +118,9 @@ class ExtendedUser extends PluginAbstract
    */
   public function save_user_attributes($user, $ldap)
   {
-    // Add the rest of the meta attributes to the user object.
-    $user->email = $ldap['mail'] ?? $user->username . '@uvm.edu';
+    // If they don't have an email address listed in the directory, 
+    // just use what's there by default in the user object.
+    $user->email = $ldap['mail'] ?? $user->email; 
     $user->firstName = $ldap['givenName'] ?? NULL;
     $user->lastName = $ldap['sn'] ?? NULL;
     $user->website = $ldap['labeledURI'] ?? NULL;
