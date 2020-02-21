@@ -42,7 +42,7 @@ class ExtendedUser extends PluginAbstract
     Settings::set('extended_user_attributes', json_encode($attributes));
 
     $db = Registry::get('db');
-    if (!UserMetadata::tableExists($db, 'users_meta')) {
+    if (!ExtendedUser::tableExists($db, 'users_meta')) {
       $query = "CREATE TABLE IF NOT EXISTS users_meta (
         meta_id bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
         user_id bigint(20) NOT NULL,
@@ -101,7 +101,7 @@ class ExtendedUser extends PluginAbstract
   {
     $meta_attributes = json_decode( Settings::get('extended_user_attributes') );
 
-    foreach ( $entry as $attribute, $value ) {
+    foreach ($entry as $attribute => $value) {
       // Only update/save certain attributes to users_meta table.
       if (in_array($attribute, $meta_attributes)){
         ExtendedUser::save_meta_attribute($user->user_id, $attribute, $value);
