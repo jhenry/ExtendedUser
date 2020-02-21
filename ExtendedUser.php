@@ -34,13 +34,20 @@ class ExtendedUser extends PluginAbstract
    */
   public function install()
   {
+
+    // Array of attributes to save to the users_meta table.
+    // i.e. we don't need to save name, email, etc there since those are being saved to the users table.
+    $attributes = array('homeDirectory, ou, eduPersonPrimaryAffiliation');
+
+    Settings::set('extended_user_attributes', json_encode($attributes));
+
     $db = Registry::get('db');
     if (!UserMetadata::tableExists($db, 'users_meta')) {
       $query = "CREATE TABLE IF NOT EXISTS users_meta (
-				meta_id bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-				user_id bigint(20) NOT NULL,
-				meta_key varchar(255) NOT NULL,
-				meta_value longtext NOT NULL);";
+        meta_id bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+        user_id bigint(20) NOT NULL,
+        meta_key varchar(255) NOT NULL,
+        meta_value longtext NOT NULL);";
 
       $db->query($query);
     }
@@ -53,25 +60,115 @@ class ExtendedUser extends PluginAbstract
    */
   public function uninstall()
   {
+    Settings::remove('extended_user_attributes');
+
     $db = Registry::get('db');
-
     $drop_meta = "DROP TABLE IF EXISTS users_meta;";
-
     $db->query($drop_meta);
+  }
+  /**
+   * Attaches plugin methods to hooks in code base
+   */
+  public function load()
+  {
+  }
+  /**
+   * Set user meta data.
+   *
+   * @param User $user User object.
+   *
+   */
+  public function save($user)
+  {
+    //TODO: validation & error handling.
+    if( class_exists('LDAP') ) {
+      // Get directory entry for this user
+      $entry = LDAP::get($user->username);
+    }
+
+    ExtendedUser::save_meta_attributes($user, $entry);
+    ExtendedUser::save_user_attributes($user, $entry);
+
   }
 
   /**
-   * Get user meta entry
+   * Save non-meta table attributes to the users table/model.
+   *
+   * @param User $user User object.
+   *
+   */
+  public function save_meta_attributes($user, $entry)
+  {
+    $meta_attributes = json_decode( Settings::get('extended_user_attributes') );
+
+    foreach ( $entry as $attribute, $value ) {
+      // Only update/save certain attributes to users_meta table.
+      if (in_array($attribute, $meta_attributes)){
+        ExtendedUser::save_meta_attribute($user->user_id, $attribute, $value);
+      }
+    }
+
+  }
+
+  /**
+   * Save non-meta table attributes to the users table/model.
+   *
+   * @param User $user User object.
+   *
+   */
+  public function save_user_attributes($user, $ldap)
+  {
+    // Add the rest of the meta attributes to the user object.
+    $user->email = $ldap['mail'] ?? $user->username . '@uvm.edu';
+    $user->firstName = $ldap['givenName'] ?? NULL;
+    $user->lastName = $ldap['sn'] ?? NULL;
+    $user->website = $ldap['labeledURI'] ?? NULL;
+
+    $userMapper = new UserMapper();
+    $userMapper->save($user);
+  }
+
+
+  /**
+   * Save/Create a single user meta entry.
+   * 
+   * @param int $user_id Id of the user this meta belongs to 
+   * @param string $meta_key reference label for the meta item we are updating
+   * @param string $meta_value data entry being updated
+   * 
+   */
+  public static function save_meta_attribute($user_id, $meta_key, $meta_value) {
+    
+    include_once "UserMeta.php";
+    $userMeta = new UserMeta();
+
+    // If there's meta for this file, we want the meta id
+    $existing_meta = ExtendedUser::get_all_meta($user_id, $meta_key);
+    if($existing_meta){
+      $userMeta->meta_id = $existing_meta->meta_id;
+    }
+
+    $userMeta->user_id = $user_id;
+    $userMeta->meta_key = $meta_key;
+    $userMeta->meta_value = $meta_value;
+    
+    include_once 'UserMetaMapper.php';
+    $userMetaMapper = new UserMetaMapper();
+    $userMetaMapper->save($userMeta);
+  }
+
+  /**
+   * Get all meta records for this user
    * 
    * @param int $user_id Id of the user this meta belongs to 
    * @param string $meta_key reference label for the meta item to retrieve
    * @return false if not found 
    */
-  public static function get($user_id, $meta_key)
+  public static function get_all_meta($user_id, $meta_key)
   {
     include_once 'UserMetaMapper.php';
     $mapper = new UserMetaMapper();
-    $meta = $mapper->getByCustom(array('video_id' => $user_id, 'meta_key' => $meta_key));
+    $meta = $mapper->getByCustom(array('user_id' => $user_id, 'meta_key' => $meta_key));
     return $meta;
   }
 
