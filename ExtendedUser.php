@@ -37,7 +37,7 @@ class ExtendedUser extends PluginAbstract
 
     // Array of attributes to save to the users_meta table.
     // i.e. we don't need to save name, email, etc there since those are being saved to the users table.
-    $attributes = array('homeDirectory, ou, eduPersonPrimaryAffiliation');
+    $attributes = array('homeDirectory', 'ou', 'eduPersonPrimaryAffiliation');
 
     Settings::set('extended_user_attributes', json_encode($attributes));
 
