@@ -82,6 +82,7 @@ class ExtendedUser extends PluginAbstract
   {
     //TODO: validation & error handling.
     if( class_exists('LDAP') ) {
+
       // Get directory entry for this user
       $entry = LDAP::get($user->username);
     }
@@ -104,7 +105,7 @@ class ExtendedUser extends PluginAbstract
     foreach ($entry as $attribute => $value) {
       // Only update/save certain attributes to users_meta table.
       if (in_array($attribute, $meta_attributes)){
-        ExtendedUser::save_meta_attribute($user->user_id, $attribute, $value);
+        ExtendedUser::save_meta_attribute($user->userId, $attribute, $value);
       }
     }
 
