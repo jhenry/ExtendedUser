@@ -160,17 +160,32 @@ class ExtendedUser extends PluginAbstract
   }
 
   /**
+   * Get single meta record for this user
+   * 
+   * @param int $user_id Id of the user this meta belongs to 
+   * @param string $meta_key reference label for the meta item to retrieve
+   * @return false if not found 
+   */
+  public static function get_meta($user_id, $meta_key)
+  {
+    include_once 'UserMetaMapper.php';
+    $mapper = new UserMetaMapper();
+    $meta = $mapper->getByCustom(array('user_id' => $user_id, 'meta_key' => $meta_key));
+    return $meta;
+  }
+
+  /**
    * Get all meta records for this user
    * 
    * @param int $user_id Id of the user this meta belongs to 
    * @param string $meta_key reference label for the meta item to retrieve
    * @return false if not found 
    */
-  public static function get_all_meta($user_id, $meta_key)
+  public static function get_all_meta($user_id)
   {
     include_once 'UserMetaMapper.php';
     $mapper = new UserMetaMapper();
-    $meta = $mapper->getByCustom(array('user_id' => $user_id, 'meta_key' => $meta_key));
+    $meta = $mapper->getAllMeta($user_id);
     return $meta;
   }
 
