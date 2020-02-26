@@ -5,12 +5,12 @@ class UserMeta extends Model
   /**
    * @var int
    */
-  public $mapper_id;
+  public $meta_id;
 
   /**
    * @var int
    */
-  public $file_id;
+  public $user_id;
 
   /**
    * @var string
