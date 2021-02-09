@@ -146,7 +146,7 @@ class ExtendedUser extends PluginAbstract
 
     // If there's meta for this file, we want the meta id
     $existing_meta = ExtendedUser::get_all_meta($user_id, $meta_key);
-    if($existing_meta){
+    if (isset($existing_meta->meta_id)){
       $userMeta->meta_id = $existing_meta->meta_id;
     }
 
