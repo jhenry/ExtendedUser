@@ -78,7 +78,7 @@ class ExtendedUser extends PluginAbstract
    * @param User $user User object.
    *
    */
-  public function save($user)
+  public static function save($user)
   {
     //TODO: validation & error handling.
     if( class_exists('LDAP') ) {
@@ -98,7 +98,7 @@ class ExtendedUser extends PluginAbstract
    * @param User $user User object.
    *
    */
-  public function save_meta_attributes($user, $entry)
+  public static function save_meta_attributes($user, $entry)
   {
     $meta_attributes = json_decode( Settings::get('extended_user_attributes') );
 
@@ -117,7 +117,7 @@ class ExtendedUser extends PluginAbstract
    * @param User $user User object.
    *
    */
-  public function save_user_attributes($user, $ldap)
+  public static function save_user_attributes($user, $ldap)
   {
     // If they don't have an email address listed in the directory, 
     // just use what's there by default in the user object.
